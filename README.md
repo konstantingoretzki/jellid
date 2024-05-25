@@ -4,9 +4,9 @@ Jellid (jellyfin item downloader) is an **unofficial** [Jellyfin](https://github
 
 ## Installation
 1. Clone the repo: `git clone https://github.com/konstantingoretzki/jellid`
-2. Give execution permission: `cd jellid/ && chmod +x jellid.py`
+2. Give execution permission: `cd jellid/ && chmod +x jellid/jellid.py`
 3. Install dependencies: `pip install -r requirements.txt`
-4. Run: `python ./jellid.py`
+4. Run: `python3 ./jellid/jellid.py`
 
 ## Usage
 1. Set your Jellyfin Web username and password: 
@@ -27,7 +27,6 @@ There are flags for specifing the location directory (`-dir`) and using the sile
 
 ## TODO
 - [ ] **Improve auth**: Using env variables is far from best practices. Username and password should be read from a file.
-- [ ] **Get audio container extension**: Currently the audio file container is hard-coded to `.flac`. Try to get the container extension like for the movie download.
 - [ ] **Auto detect type**: Call correct type downloader without having to set the type manually. 
 - [ ] **Support more collection types**: There are more then these basic item types that should be supported. Probably more and better error handling is needed.
 - [ ] **Add interactive mode**: Find item names via CLI instead of having to extract them from the URL.

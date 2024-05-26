@@ -104,8 +104,7 @@ if __name__ == "__main__":
 
         # Download show(s)
         if args.shows and (len(args.shows[0]) > 0):
-            # download.get_shows(session, args.shows[0], args.yes, args.directory)
-            pass
+            download.get_shows(session, args.shows[0], args.yes, args.directory)
 
         # Download album(s)
         if args.albums and (len(args.albums[0]) > 0):

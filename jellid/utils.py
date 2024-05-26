@@ -32,9 +32,9 @@ def subs_path(path):
     return path
 
 
-def save_mkdir(dir):
+def save_mkdirs(dir):
     try:
-        os.mkdir(dir)
+        os.makedirs(dir)
     except OSError as e:
         # Directory already exists
         if e.errno == errno.EEXIST:

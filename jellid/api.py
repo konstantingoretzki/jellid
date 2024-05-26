@@ -8,11 +8,14 @@ def get_item_info(session, item_id):
 
 
 def get_songs(session, album_id):
-    # https://test.example.com/Items/?ParentId=<album-id>&Fields=MediaSources&SortBy=IndexNumber
+    # https://test.example.com/Items/?ParentId=<album-id>&Fields=MediaSources&SortBy=ParentIndexNumber,IndexNumber
     # MediaSources provides access to the Container
-    # Sorting by IndexNumber needed to name songs after their album index
+    # Sorting by ParentIndexNumber is needed if the Album contains multiple disks
+    # IndexNumber gives the position of the title in the album
     return session.get_json(
-        "/Items?ParentId=" + str(album_id) + "&Fields=MediaSources&SortBy=IndexNumber"
+        "/Items?ParentId="
+        + str(album_id)
+        + "&Fields=MediaSources&SortBy=ParentIndexNumber,IndexNumber"
     )
 
 

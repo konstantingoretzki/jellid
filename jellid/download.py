@@ -6,7 +6,7 @@ import utils
 
 def get_movies(session, movies, yes, path=""):
     for movie in movies:
-        # get info about movie
+        # Get info about movie
         movie_info = api.get_item_info(session, movie)
 
         # TODO: subs_path for movie name aswell?
@@ -16,7 +16,7 @@ def get_movies(session, movies, yes, path=""):
 
         print(f"\n🎥 Movie: {movie_name}")
 
-        # ask before download
+        # Ask before download
         if not yes:
             user_input = input(f"Download the movie ? (y/n): ")
             if user_input != "y":
@@ -32,19 +32,17 @@ def get_shows(session, series, yes, path=""):
 
 def get_albums(session, albums, yes, path=""):
     for album in albums:
-        # get list of songs
+        # Get list of songs
         songs = api.get_songs(session, album)
 
-        # TODO: handle albums with multiple disks
-
-        # directory name
+        # Directory name
         album_name = songs["Items"][0]["Album"]
         directory = os.path.join(path, utils.subs_path(album_name))
 
         print(f"\n🎶 Album: {album_name}")
         number_songs = songs["TotalRecordCount"]
 
-        # ask before download
+        # Ask before download
         if not yes:
             user_input = input(
                 f"Found {number_songs} song(s) - do you want to download it / them? (y/n): "
@@ -54,11 +52,17 @@ def get_albums(session, albums, yes, path=""):
 
         utils.save_mkdir(directory)
 
-        # Is it possible to now have an index number?
+        # Check if multiple discs are present
+        parent_indizes = [song["ParentIndexNumber"] for song in songs["Items"]]
+        multiple_disks = any(index != 1 for index in parent_indizes)
+        # Manual tracking needed because the index would reset for multiple dics
+        index_counter = 1
+
+        # Is it possible to not have an index number?
         for song in songs["Items"]:
             print(
                 "Downloading song "
-                + str(song["IndexNumber"])
+                + str(index_counter)
                 + "/"
                 + str(number_songs)
                 + " ..."
@@ -69,32 +73,37 @@ def get_albums(session, albums, yes, path=""):
                 + utils.subs_path(song["Name"])
             )
 
+            # Add leading number if multiple discs are present
+            if multiple_disks:
+                song_name = str(song["ParentIndexNumber"]) + song_name
+
             song_filename = song_name + "." + song["MediaSources"][0]["Container"]
             session.download_item(song["Id"], os.path.join(directory, song_filename))
+            index_counter += 1
             print("\033[2A")
 
 
 def get_artists(session, artists, yes, path=""):
     for artist in artists:
-        # get list of albums
+        # Get list of albums
         albums = api.get_albums(session, artist)
 
-        # get the artist name through the first album
+        # Get the artist name through the first album
         artist_name = albums["Items"][0]["AlbumArtist"]
         directory = os.path.join(path, utils.subs_path(artist_name))
 
         print(f"\n🎨 Artist: {artist_name}")
 
-        # ask before download
+        # Ask before download
         if not yes:
             user_input = input(f"Download all the albums ? (y/n): ")
             if user_input != "y":
                 continue
 
-        # create artist directory
+        # Create artist directory
         utils.save_mkdir(directory)
 
-        # list of albums for get_albums()
+        # List of albums for get_albums()
         albums_ids = [album["Id"] for album in albums["Items"]]
 
         get_albums(session, albums_ids, yes=True, path=directory)

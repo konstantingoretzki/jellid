@@ -4,12 +4,12 @@ import os
 
 
 def valid_url(url):
-    # regex to check for a valid URL
+    # Regex to check for a valid URL
     # https://mathiasbynens.be/demo/url-regex
-    # fails on TLD check
+    # Fails on TLD check
     regex = "^(https?)://[^\s/$.?#].[^\s]*$"
 
-    # string is empty or regex hasn't matched
+    # String is empty or regex hasn't matched
     if (url == None) or (not bool(re.search(regex, url))):
         return False
     else:
@@ -23,7 +23,7 @@ def subs_path(path):
     # WSL will be detected as Linux so OS check can be skipped
     bad_chars = ["\\", "/", ":", "*", "?", '"', "<", ">", "|"]
 
-    # should be fast
+    # Should be fast
     # https://stackoverflow.com/a/27086669
     for c in bad_chars:
         if c in path:
@@ -36,7 +36,7 @@ def save_mkdir(dir):
     try:
         os.mkdir(dir)
     except OSError as e:
-        # directory already exists
+        # Directory already exists
         if e.errno == errno.EEXIST:
             pass
         else:

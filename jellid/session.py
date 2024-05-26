@@ -7,10 +7,10 @@ class NetworkSession:
     def __init__(self, url, username, password):
         self.url = urlparse(url)
         self.username = username
-        # use hacky private attribut self.__password instead?
+        # Use hacky private attribut self.__password instead?
         self.password = password
 
-        # request session
+        # Request session
         self.session = requests.Session()
 
         self.headers = {
@@ -22,7 +22,7 @@ class NetworkSession:
         return self
 
     def __exit__(self, exc_type, exc_value, exc_tb):
-        # terminate the request session
+        # Terminate the request session
         self.session.close()
 
     def set_post_auth_headers(self):
@@ -43,7 +43,7 @@ class NetworkSession:
 
         data_auth = {"Username": self.username, "Pw": self.password}
 
-        # e.g. https://test.example.com/Users/authenticatebyname
+        # E.g. https://test.example.com/Users/authenticatebyname
         response = self.session.post(
             urljoin(self.url.geturl(), "Users/authenticatebyname"),
             headers=headers_auth,
@@ -51,7 +51,6 @@ class NetworkSession:
         )
         response_json = response.json()
 
-        # self.user_id = response_json["SessionInfo"]["UserId"]
         self.token = response_json["AccessToken"]
         self.set_post_auth_headers()
 
@@ -73,12 +72,12 @@ class NetworkSession:
                 content_range = r.headers.get("Content-Range")
                 # print(content_range)
 
-                # download will fail for servers that do not support partial download
+                # Download will fail for servers that do not support partial download
                 if (r.status_code != 206) or (content_range is None):
                     raise Exception("Server does not support partial download.")
 
                 total = int(content_range.split("/")[1])
-                # use only downloaded bytes instead of written bytes?
+                # Use only downloaded bytes instead of written bytes?
                 written = 0
                 bytes_dl = 0
 
@@ -122,12 +121,12 @@ class NetworkSession:
             total_written += written
             # print(f"\nWrote {total_written}/{file_size}")
 
-            # download is done
+            # Download is done
             if total_written == file_size:
                 # print("\nDownload of the complete file is done.")
                 break
 
-            # only a part could be downloaded
+            # Only a part could be downloaded
             else:
                 print("Download interrupted - resuming session ...\n")
                 current_try += 1

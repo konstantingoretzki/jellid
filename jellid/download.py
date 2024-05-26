@@ -19,7 +19,7 @@ def get_movies(session, movies, yes, path=""):
                 continue
 
         # Multiple quality versions exists
-        if len(movie_info["MediaSources"]) > 1:
+        if ( (len(movie_info["MediaSources"]) > 1) and (not yes)):
             print(f"\nMultiple formats exists:")
             index_ctr = 0
             for source in movie_info["MediaSources"]:
@@ -45,7 +45,7 @@ def get_movies(session, movies, yes, path=""):
                 print(f"Invalid selection - exiting ...\n")
                 exit(1)
 
-        # Only one version exists
+        # Only one version exists or auto-yes flag was set
         else:
             movie_container = movie_info["MediaSources"][0]["Container"]
 
@@ -53,9 +53,38 @@ def get_movies(session, movies, yes, path=""):
         session.download_item(movie, os.path.join(path, movie_filename))
 
 
-def get_shows(session, series, yes, path=""):
-    # TODO
-    pass
+def get_shows(session, shows, yes, path=""):
+    for show in shows:
+        # Get list of episodes
+        episodes = api.get_episodes(session, show)
+
+        # Directory name
+        show_name = episodes["Items"][0]["SeriesName"]
+        directory = os.path.join(path, utils.subs_path(show_name))
+
+        print(f"\n📺 Show: {show_name}")
+        number_episodes = episodes["TotalRecordCount"]
+
+        # Ask before download
+        if not yes:
+            user_confirm = input(
+                f"Found {number_episodes} episode(s) - do you want to download it / them? (y/n): "
+            )
+            if user_confirm != "y":
+                continue
+
+        # For every unique season
+        seasons = [episode["SeasonName"] for episode in episodes["Items"]]
+        for season in list(set(seasons)):
+            # Create season dir
+            directory = os.path.join(path, utils.subs_path(show_name), utils.subs_path(season))
+            utils.save_mkdirs(directory)
+
+            # Get episodes per season
+            # Costs a few cycles, but now it's sure that the episode is part of the season
+            season_episodes = [episode["Id"] for episode in episodes["Items"] if season == episode["SeasonName"]]
+            get_movies(session, season_episodes, yes=True, path=directory)
+        print("")
 
 
 def get_albums(session, albums, yes, path=""):
@@ -78,7 +107,7 @@ def get_albums(session, albums, yes, path=""):
             if user_confirm != "y":
                 continue
 
-        utils.save_mkdir(directory)
+        utils.save_mkdirs(directory)
 
         # Check if multiple discs are present
         parent_indizes = [song["ParentIndexNumber"] for song in songs["Items"]]
@@ -129,7 +158,7 @@ def get_artists(session, artists, yes, path=""):
                 continue
 
         # Create artist directory
-        utils.save_mkdir(directory)
+        utils.save_mkdirs(directory)
 
         # List of albums for get_albums()
         albums_ids = [album["Id"] for album in albums["Items"]]

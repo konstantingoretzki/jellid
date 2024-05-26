@@ -3,12 +3,12 @@
 
 
 def get_item_info(session, item_id):
-    # https://test.example.com/Items/<item-id>
+    # https://test.example.com/Items/<item_id>
     return session.get_json("/Items/" + str(item_id))
 
 
 def get_songs(session, album_id):
-    # https://test.example.com/Items/?ParentId=<album-id>&Fields=MediaSources&SortBy=ParentIndexNumber,IndexNumber
+    # https://test.example.com/Items/?ParentId=<album_id>&Fields=MediaSources&SortBy=ParentIndexNumber,IndexNumber
     # MediaSources provides access to the Container
     # Sorting by ParentIndexNumber is needed if the Album contains multiple disks
     # IndexNumber gives the position of the title in the album
@@ -20,9 +20,14 @@ def get_songs(session, album_id):
 
 
 def get_albums(session, artist_id):
-    # https://test.example.com/Items?IncludeItemTypes=MusicAlbum&Recursive=true&AlbumArtistIds=<album-id>
+    # https://test.example.com/Items?IncludeItemTypes=MusicAlbum&Recursive=true&AlbumArtistIds=<artist_id>
     # Without Recursive we only get the main collections like Music or Movies
     return session.get_json(
         "/Items?IncludeItemTypes=MusicAlbum&Recursive=true&AlbumArtistIds="
         + str(artist_id)
     )
+
+
+def get_episodes(session, show_id):
+    # https://test.example.com//Shows/<show_id>/Episodes
+    return session.get_json("/Shows/" + str(show_id) + "/Episodes")

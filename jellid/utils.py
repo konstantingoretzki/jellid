@@ -2,6 +2,7 @@ import errno
 import re
 import os
 
+
 def valid_url(url):
     # regex to check for a valid URL
     # https://mathiasbynens.be/demo/url-regex
@@ -13,6 +14,7 @@ def valid_url(url):
         return False
     else:
         return True
+
 
 def subs_path(path):
     bad_chars = []
@@ -28,6 +30,7 @@ def subs_path(path):
             path = path.replace(c, " -")
 
     return path
+
 
 def save_mkdir(dir):
     try:

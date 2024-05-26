@@ -3,6 +3,7 @@ import os
 import api
 import utils
 
+
 def get_movies(session, movies, yes, path=""):
     for movie in movies:
         # get info about movie
@@ -23,9 +24,11 @@ def get_movies(session, movies, yes, path=""):
 
         session.download_item(movie, os.path.join(path, movie_filename))
 
+
 def get_shows(session, series, yes, path=""):
     # TODO
     pass
+
 
 def get_albums(session, albums, yes, path=""):
     for album in albums:
@@ -53,7 +56,13 @@ def get_albums(session, albums, yes, path=""):
 
         # Is it possible to now have an index number?
         for song in songs["Items"]:
-            print("Downloading song " + str(song["IndexNumber"]) + "/" + str(number_songs) + " ...")
+            print(
+                "Downloading song "
+                + str(song["IndexNumber"])
+                + "/"
+                + str(number_songs)
+                + " ..."
+            )
             # Add leading '0' if the track number < 10
             song_name = (
                 f"{int(song['IndexNumber']) if int(song['IndexNumber']) >= 10 else '0'+str(song['IndexNumber'])} - "
@@ -63,6 +72,7 @@ def get_albums(session, albums, yes, path=""):
             song_filename = song_name + "." + song["MediaSources"][0]["Container"]
             session.download_item(song["Id"], os.path.join(directory, song_filename))
             print("\033[2A")
+
 
 def get_artists(session, artists, yes, path=""):
     for artist in artists:
@@ -85,9 +95,7 @@ def get_artists(session, artists, yes, path=""):
         utils.save_mkdir(directory)
 
         # list of albums for get_albums()
-        albums_ids = [album["Id"] for album in albums["Items"]] 
+        albums_ids = [album["Id"] for album in albums["Items"]]
 
         get_albums(session, albums_ids, yes=True, path=directory)
         print("")
-
-

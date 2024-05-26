@@ -2,6 +2,7 @@ import time
 from urllib.parse import urljoin, urlparse
 import requests
 
+
 class NetworkSession:
     def __init__(self, url, username, password):
         self.url = urlparse(url)
@@ -19,7 +20,7 @@ class NetworkSession:
 
     def __enter__(self):
         return self
- 
+
     def __exit__(self, exc_type, exc_value, exc_tb):
         # terminate the request session
         self.session.close()
@@ -59,7 +60,7 @@ class NetworkSession:
         response = self.session.get(url, headers=self.headers)
         response_json = response.json()
         return response_json
-    
+
     def download_part(self, url, filename, byte_position):
         headers = self.headers
         headers["Range"] = f"bytes={byte_position}-"
@@ -130,5 +131,5 @@ class NetworkSession:
             else:
                 print("Download interrupted - resuming session ...\n")
                 current_try += 1
-        
+
         print("\n")

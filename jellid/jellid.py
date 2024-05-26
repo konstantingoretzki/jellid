@@ -16,8 +16,8 @@ if __name__ == "__main__":
         "-s", "--server", type=str, help="URL of the Jellyfin instance", required=True
     )
 
-    # env variables
-    # set env vars via e.g. `export JELLYFIN_USERNAME=my_user_name`
+    # Env variables
+    # Set env vars via e.g. `export JELLYFIN_USERNAME=my_user_name`
     parser.add_argument(
         "-u",
         "--user",
@@ -33,7 +33,7 @@ if __name__ == "__main__":
         help="Password of the Jellyfin account",
     )
 
-    # assume yes: automatic "yes" to prompts, run non-interactively
+    # Assume yes: automatic "yes" to prompts, run non-interactively
     parser.add_argument(
         "-yes",
         "--yes",
@@ -42,7 +42,7 @@ if __name__ == "__main__":
         help="Automatic 'yes' to prompts",
     )
 
-    # directory for downloaded items
+    # Directory for downloaded items
     parser.add_argument(
         "-dir",
         "--directory",
@@ -51,26 +51,25 @@ if __name__ == "__main__":
         help="Directory where the items should be saved",
     )
 
-    # download movie(s)
+    # Download movie(s)
     parser.add_argument(
         "-m", "--movies", nargs="+", action="append", help="Ids of movies to download"
     )
 
-    # download show(s)
+    # Download show(s)
     parser.add_argument(
-        "-s",
         "--shows",
         nargs="+",
         action="append",
         help="Ids of shows to download",
     )
 
-    # download album(s)
+    # Download album(s)
     parser.add_argument(
         "-a", "--albums", nargs="+", action="append", help="Ids of albums to download"
     )
 
-    # download all albums from artists
+    # Download all albums from artists
     parser.add_argument(
         "-art",
         "--artists",
@@ -83,35 +82,35 @@ if __name__ == "__main__":
 
     print(f"\033[1mjellid.py - unoffical jellyfin item downloader\033[0m")
 
-    # check if username and password are set
+    # Check if username and password are set
     if not args.user and args.password:
         print(
             "Please set the username (JELLYFIN_USERNAME) and password (JELLYFIN_PASSWORD) using environment variables or pass as CLI arguments."
         )
         exit(1)
 
-    # check if URL is valid
+    # Check if URL is valid
     if not utils.valid_url(args.server):
         print("Bad URL format - correct is e.g. https://test.example.com")
         exit(1)
 
     with NetworkSession(args.server, args.user, args.password) as session:
-        # login with creds
+        # Login with creds
         session.login()
 
-        # download movie(s)
+        # Download movie(s)
         if args.movies and (len(args.movies[0]) > 0):
             download.get_movies(session, args.movies[0], args.yes, args.directory)
 
-        # download show(s)
+        # Download show(s)
         if args.shows and (len(args.shows[0]) > 0):
             # download.get_shows(session, args.shows[0], args.yes, args.directory)
             pass
 
-        # download album(s)
+        # Download album(s)
         if args.albums and (len(args.albums[0]) > 0):
             download.get_albums(session, args.albums[0], args.yes, args.directory)
 
-        # download all albums by artists
+        # Download all albums by artists
         if args.artists and (len(args.artists[0]) > 0):
             download.get_artists(session, args.artists[0], args.yes, args.directory)

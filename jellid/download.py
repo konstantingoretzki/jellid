@@ -75,7 +75,8 @@ def get_shows(session, shows, yes, path=""):
 
         # For every unique season
         seasons = [episode["SeasonName"] for episode in episodes["Items"]]
-        for season in list(set(seasons)):
+        print(sorted(list(set(seasons))))
+        for season in sorted(list(set(seasons))):
             # Create season dir
             directory = os.path.join(path, utils.subs_path(show_name), utils.subs_path(season))
             utils.save_mkdirs(directory)

@@ -83,7 +83,7 @@ if __name__ == "__main__":
     print(f"\033[1mjellid.py - unoffical jellyfin item downloader\033[0m")
 
     # Check if username and password are set
-    if not args.user and args.password:
+    if (args.user is None) or (args.password is None):
         print(
             "Please set the username (JELLYFIN_USERNAME) and password (JELLYFIN_PASSWORD) using environment variables or pass as CLI arguments."
         )

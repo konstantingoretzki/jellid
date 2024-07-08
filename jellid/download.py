@@ -4,165 +4,184 @@ import api
 import utils
 
 
-def get_movies(session, movies, yes, path=""):
-    for movie in movies:
-        # Get info about movie
-        movie_info = api.get_item_info(session, movie)
-        movie_name = movie_info["Name"]
+class Downloader:
+    def __init__(self, session):
+        self.session = session
 
-        print(f"\n🎥 Movie: {movie_name}")
+    def get_movies(self, movies, path="", yes=True):
+        for movie in movies:
+            # Get info about movie
+            movie_info = api.get_item_info(self.session, movie)
+            movie_name = movie_info["Name"]
 
-        # Ask before download
-        if not yes:
-            user_confirm = input(f"Download the movie ? (y/n): ")
-            if user_confirm != "y":
-                continue
+            print(f"\n🎥 Movie: {movie_name}")
 
-        # Multiple quality versions exists
-        if ( (len(movie_info["MediaSources"]) > 1) and (not yes)):
-            print(f"\nMultiple formats exists:")
-            index_ctr = 0
-            for source in movie_info["MediaSources"]:
-                print(f"{index_ctr}) - {source['Name']}")
-                index_ctr += 1
+            # Ask before download
+            if not yes:
+                user_confirm = input(f"Download the movie ? (y/n): ")
+                if user_confirm != "y":
+                    continue
 
-            valid_indizes = list(range(0, len(movie_info["MediaSources"])))
-            user_index = input(f"Which version to download? (index, e.g. '0'): ")
+            # Multiple quality versions exists
+            if (len(movie_info["MediaSources"]) > 1) and (not yes):
+                print(f"\nMultiple formats exists:")
+                index_ctr = 0
+                for source in movie_info["MediaSources"]:
+                    print(f"{index_ctr}) - {source['Name']}")
+                    index_ctr += 1
 
-            # Validate user selection
-            try:
-                # Index out of range
-                if not int(user_index) in valid_indizes:
-                    raise ()
-                # Different sources can have different containers
-                movie_container = movie_info["MediaSources"][int(user_index)][
-                    "Container"
-                ]
-                # Override the ID to the selected item
-                movie = movie_info["MediaSources"][int(user_index)]["Id"]
-            except Exception:
-                # Invalid user input like out of range or float input
-                print(f"Invalid selection - exiting ...\n")
-                exit(1)
+                valid_indizes = list(range(0, len(movie_info["MediaSources"])))
+                user_index = input(f"Which version to download? (index, e.g. '0'): ")
 
-        # Only one version exists or auto-yes flag was set
-        else:
-            movie_container = movie_info["MediaSources"][0]["Container"]
+                # Validate user selection
+                try:
+                    # Index out of range
+                    if not int(user_index) in valid_indizes:
+                        raise ()
+                    # Different sources can have different containers
+                    movie_container = movie_info["MediaSources"][int(user_index)][
+                        "Container"
+                    ]
+                    # Override the ID to the selected item
+                    movie = movie_info["MediaSources"][int(user_index)]["Id"]
+                except Exception:
+                    # Invalid user input like out of range or float input
+                    print(f"Invalid selection - exiting ...\n")
+                    exit(1)
 
-        movie_filename = utils.subs_path(movie_name) + "." + movie_container
-        session.download_item(movie, os.path.join(path, movie_filename))
+            # Only one version exists or auto-yes flag was set
+            else:
+                movie_container = movie_info["MediaSources"][0]["Container"]
 
-
-def get_shows(session, shows, yes, path=""):
-    for show in shows:
-        # Get list of episodes
-        episodes = api.get_episodes(session, show)
-
-        # Directory name
-        show_name = episodes["Items"][0]["SeriesName"]
-        directory = os.path.join(path, utils.subs_path(show_name))
-
-        print(f"\n📺 Show: {show_name}")
-        number_episodes = episodes["TotalRecordCount"]
-
-        # Ask before download
-        if not yes:
-            user_confirm = input(
-                f"Found {number_episodes} episode(s) - do you want to download it / them? (y/n): "
-            )
-            if user_confirm != "y":
-                continue
-
-        # For every unique season
-        seasons = [episode["SeasonName"] for episode in episodes["Items"]]
-        print(sorted(list(set(seasons))))
-        for season in sorted(list(set(seasons))):
-            # Create season dir
-            directory = os.path.join(path, utils.subs_path(show_name), utils.subs_path(season))
-            utils.save_mkdirs(directory)
-
-            # Get episodes per season
-            # Costs a few cycles, but now it's sure that the episode is part of the season
-            season_episodes = [episode["Id"] for episode in episodes["Items"] if season == episode["SeasonName"]]
-            get_movies(session, season_episodes, yes=True, path=directory)
+            movie_filename = utils.subs_path(movie_name) + "." + movie_container
+            self.session.download_item(movie, os.path.join(path, movie_filename))
         print("")
 
+    def get_seasons(self, seasons, path="", yes=True):
+        for season in seasons:
+            # Get list of episodes for the selected season
+            episodes = api.get_episodes(self.session, season)
 
-def get_albums(session, albums, yes, path=""):
-    for album in albums:
-        # Get list of songs
-        songs = api.get_songs(session, album)
+            # Directory name
+            show_name = episodes["Items"][0]["SeriesName"]
+            season_name = episodes["Items"][0]["SeasonName"]
+            directory = os.path.join(path, utils.subs_path(season_name))
 
-        # Directory name
-        album_name = songs["Items"][0]["Album"]
-        directory = os.path.join(path, utils.subs_path(album_name))
+            print(f"\n📺 {show_name}: {season_name}")
+            number_episodes = episodes["TotalRecordCount"]
 
-        print(f"\n🎶 Album: {album_name}")
-        number_songs = songs["TotalRecordCount"]
+            # Ask before download
+            if not yes:
+                user_confirm = input(
+                    f"Found {number_episodes} episode(s) - do you want to download it / them? (y/n): "
+                )
+                if user_confirm != "y":
+                    continue
 
-        # Ask before download
-        if not yes:
-            user_confirm = input(
-                f"Found {number_songs} song(s) - do you want to download it / them? (y/n): "
-            )
-            if user_confirm != "y":
-                continue
+            utils.save_mkdirs(directory)
 
-        utils.save_mkdirs(directory)
+            episode_ids = [episode["Id"] for episode in episodes["Items"]]
+            self.get_movies(episode_ids, path=directory)
+        print("")
 
-        # Check if multiple discs are present
-        parent_indizes = [song["ParentIndexNumber"] for song in songs["Items"]]
-        multiple_disks = any(index != 1 for index in parent_indizes)
-        # Manual tracking needed because the index would reset for multiple dics
-        index_counter = 1
+    def get_shows(self, shows, path="", yes=True):
+        for show in shows:
+            # Get list of seasons
+            seasons = api.get_seasons(self.session, show)
 
-        # Is it possible to not have an index number?
-        for song in songs["Items"]:
-            print(
-                "Downloading song "
-                + str(index_counter)
-                + "/"
-                + str(number_songs)
-                + " ..."
-            )
-            # Add leading '0' if the track number < 10
-            song_name = (
-                f"{int(song['IndexNumber']) if int(song['IndexNumber']) >= 10 else '0'+str(song['IndexNumber'])} - "
-                + utils.subs_path(song["Name"])
-            )
+            # Directory name
+            show_name = seasons["Items"][0]["SeriesName"]
+            directory = os.path.join(path, utils.subs_path(show_name))
 
-            # Add leading number if multiple discs are present
-            if multiple_disks:
-                song_name = str(song["ParentIndexNumber"]) + song_name
+            print(f"\n📺 Show: {show_name}")
 
-            song_filename = song_name + "." + song["MediaSources"][0]["Container"]
-            session.download_item(song["Id"], os.path.join(directory, song_filename))
-            index_counter += 1
-            print("\033[2A")
+            # Ask before download
+            if not yes:
+                user_confirm = input(f"Download all the seasons ? (y/n): ")
+                if user_confirm != "y":
+                    continue
 
+            season_ids = [season["Id"] for season in seasons["Items"]]
+            self.get_seasons(season_ids, path=directory)
+        print("")
 
-def get_artists(session, artists, yes, path=""):
-    for artist in artists:
-        # Get list of albums
-        albums = api.get_albums(session, artist)
+    def get_albums(self, albums, path="", yes=True):
+        for album in albums:
+            # Get list of songs
+            songs = api.get_songs(self.session, album)
 
-        # Get the artist name through the first album
-        artist_name = albums["Items"][0]["AlbumArtist"]
-        directory = os.path.join(path, utils.subs_path(artist_name))
+            # Directory name
+            album_name = songs["Items"][0]["Album"]
+            directory = os.path.join(path, utils.subs_path(album_name))
 
-        print(f"\n🎨 Artist: {artist_name}")
+            print(f"\n🎶 Album: {album_name}")
+            number_songs = songs["TotalRecordCount"]
 
-        # Ask before download
-        if not yes:
-            user_confirm = input(f"Download all the albums ? (y/n): ")
-            if user_confirm != "y":
-                continue
+            # Ask before download
+            if not yes:
+                user_confirm = input(
+                    f"Found {number_songs} song(s) - do you want to download it / them? (y/n): "
+                )
+                if user_confirm != "y":
+                    continue
 
-        # Create artist directory
-        utils.save_mkdirs(directory)
+            utils.save_mkdirs(directory)
 
-        # List of albums for get_albums()
-        albums_ids = [album["Id"] for album in albums["Items"]]
+            # Check if multiple discs are present
+            parent_indizes = [song["ParentIndexNumber"] for song in songs["Items"]]
+            multiple_disks = any(index != 1 for index in parent_indizes)
+            # Manual tracking needed because the index would reset for multiple dics
+            index_counter = 1
 
-        get_albums(session, albums_ids, yes=True, path=directory)
+            # Is it possible to not have an index number?
+            for song in songs["Items"]:
+                print(
+                    "\nDownloading song "
+                    + str(index_counter)
+                    + "/"
+                    + str(number_songs)
+                    + " ..."
+                )
+                # Add leading '0' if the track number < 10
+                song_name = (
+                    f"{int(song['IndexNumber']) if int(song['IndexNumber']) >= 10 else '0'+str(song['IndexNumber'])} - "
+                    + utils.subs_path(song["Name"])
+                )
+
+                # Add leading number if multiple discs are present
+                if multiple_disks:
+                    song_name = str(song["ParentIndexNumber"]) + song_name
+
+                song_filename = song_name + "." + song["MediaSources"][0]["Container"]
+                self.session.download_item(
+                    song["Id"], os.path.join(directory, song_filename)
+                )
+                index_counter += 1
+            print("")
+        print("")
+
+    def get_artists(self, artists, path="", yes=True):
+        for artist in artists:
+            # Get list of albums
+            albums = api.get_albums(self.session, artist)
+
+            # Get the artist name through the first album
+            artist_name = albums["Items"][0]["AlbumArtist"]
+            directory = os.path.join(path, utils.subs_path(artist_name))
+
+            print(f"\n🎨 Artist: {artist_name}")
+
+            # Ask before download
+            if not yes:
+                user_confirm = input(f"Download all the albums ? (y/n): ")
+                if user_confirm != "y":
+                    continue
+
+            # Create artist directory
+            utils.save_mkdirs(directory)
+
+            # List of albums for get_albums()
+            albums_ids = [album["Id"] for album in albums["Items"]]
+
+            self.get_albums(albums_ids, path=directory)
         print("")

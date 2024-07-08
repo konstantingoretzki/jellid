@@ -5,7 +5,7 @@ import os
 
 import utils
 from session import NetworkSession
-import download as download
+from download import Downloader
 
 if __name__ == "__main__":
 
@@ -42,6 +42,15 @@ if __name__ == "__main__":
         help="Automatic 'yes' to prompts",
     )
 
+    # Overwrite existing items
+    parser.add_argument(
+        "-over",
+        "--overwrite",
+        default=False,
+        action="store_true",
+        help="Overwrite existing items",
+    )
+
     # Directory for downloaded items
     parser.add_argument(
         "-dir",
@@ -54,6 +63,14 @@ if __name__ == "__main__":
     # Download movie(s)
     parser.add_argument(
         "-m", "--movies", nargs="+", action="append", help="Ids of movies to download"
+    )
+
+    # Download show(s)
+    parser.add_argument(
+        "--seasons",
+        nargs="+",
+        action="append",
+        help="Ids of seasons to download",
     )
 
     # Download show(s)
@@ -83,7 +100,7 @@ if __name__ == "__main__":
     print(f"\033[1mjellid.py - unoffical jellyfin item downloader\033[0m")
 
     # Check if username and password are set
-    if not args.user and args.password:
+    if (args.user is None) or (args.password is None):
         print(
             "Please set the username (JELLYFIN_USERNAME) and password (JELLYFIN_PASSWORD) using environment variables or pass as CLI arguments."
         )
@@ -94,22 +111,28 @@ if __name__ == "__main__":
         print("Bad URL format - correct is e.g. https://test.example.com")
         exit(1)
 
-    with NetworkSession(args.server, args.user, args.password) as session:
+    with NetworkSession(args.server, args.user, args.password, args.overwrite) as session:
         # Login with creds
         session.login()
 
+        downloader = Downloader(session)
+
         # Download movie(s)
         if args.movies and (len(args.movies[0]) > 0):
-            download.get_movies(session, args.movies[0], args.yes, args.directory)
+            downloader.get_movies(args.movies[0], args.directory, args.yes)
+
+        # Download season(s)
+        if args.seasons and (len(args.seasons[0]) > 0):
+            downloader.get_seasons(args.seasons[0], args.directory, args.yes)
 
         # Download show(s)
         if args.shows and (len(args.shows[0]) > 0):
-            download.get_shows(session, args.shows[0], args.yes, args.directory)
+            downloader.get_shows(args.shows[0], args.directory, args.yes)
 
         # Download album(s)
         if args.albums and (len(args.albums[0]) > 0):
-            download.get_albums(session, args.albums[0], args.yes, args.directory)
+            downloader.get_albums(args.albums[0], args.directory, args.yes)
 
-        # Download all albums by artists
+        # Download artist(s)
         if args.artists and (len(args.artists[0]) > 0):
-            download.get_artists(session, args.artists[0], args.yes, args.directory)
+            downloader.get_artists(args.artists[0], args.directory, args.yes)

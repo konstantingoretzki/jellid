@@ -28,6 +28,12 @@ def get_albums(session, artist_id):
     )
 
 
-def get_episodes(session, show_id):
-    # https://test.example.com//Shows/<show_id>/Episodes
-    return session.get_json("/Shows/" + str(show_id) + "/Episodes")
+def get_episodes(session, season_id):
+    # Search via 'Items' needed because there is no /Seasons/<season_id>/Episodes
+    # https://test.example.com/Items?ParentId=<season_id>&Recursive=true
+    return session.get_json("/Items?ParentId=" + str(season_id) + "&Recursive=true")
+
+
+def get_seasons(session, show_id):
+    # https://test.example.com/Shows/<show_id>/Seasons
+    return session.get_json("/Shows/" + str(show_id) + "/Seasons")

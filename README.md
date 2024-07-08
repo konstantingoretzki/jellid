@@ -18,15 +18,10 @@ Jellid (jellyfin item downloader) is an **unofficial** [Jellyfin](https://github
     - e.g. `https://test.example.com/web/index.html#!/details?id=<item-id>&serverId=<server-id>` --> `<item-id>`
     
 3. Call `jellid.py` by using the correct item type:
-    - Movie: `./jellid/jellid.py -s https://test.example.com -m <id> <id2> ...`
-    - Show: `./jellid/jellid.py -s https://test.example.com --shows <id> <id2> ...`
-    - Album: `./jellid/jellid.py -s https://test.example.com -a <id> <id2> ...`
-    - Artist: `./jellid/jellid.py -s https://test.example.com -art <id> <id2> ...`
+    - Movies: `python3 ./jellid/jellid.py -s https://test.example.com -m <id> <id2> ...`
+    - Seasons: `python3 ./jellid/jellid.py -s https://test.example.com --seasons <id> <id2> ...`
+    - Shows: `python3 ./jellid/jellid.py -s https://test.example.com --shows <id> <id2> ...`
+    - Albums: `python3 ./jellid/jellid.py -s https://test.example.com -a <id> <id2> ...`
+    - Artists: `python3 ./jellid/jellid.py -s https://test.example.com -art <id> <id2> ...`
     
-There are flags for specifing the location directory (`-dir`) and using the silent mode (`-yes`) that does not ask for confirmation and uses automatic 'yes' for prompts. The script detects already downloaded items (albums, artists) and skips them.
-
-
-## TODO
-- [ ] **Improve auth**: Using env variables is far from best practices. Username and password should be read from a file.
-- [ ] **Auto detect type**: Call correct type downloader without having to set the type manually.
-- [ ] **Add interactive mode**: Find item names via CLI instead of having to extract them from the URL.
+There are flags for specifing the location directory (`-dir`) and using the silent mode (`-yes`) that does not ask for confirmation and uses automatic 'yes' for prompts. The script detects already downloaded items skips them. If you want to overwrite them instead, you can use the flag `-over`.

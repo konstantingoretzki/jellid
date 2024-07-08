@@ -1,14 +1,18 @@
 import time
 from urllib.parse import urljoin, urlparse
 import requests
+from os import path
 
 
 class NetworkSession:
-    def __init__(self, url, username, password):
+    def __init__(self, url, username, password, overwrite=False):
         self.url = urlparse(url)
         self.username = username
         # Use hacky private attribut self.__password instead?
         self.password = password
+
+        # Overwrite already existing items
+        self.overwrite = overwrite
 
         # Request session
         self.session = requests.Session()
@@ -105,6 +109,11 @@ class NetworkSession:
     def download_item(self, item_id, item_path):
         url = urljoin(self.url.geturl(), "Items/" + str(item_id) + "/Download")
 
+        # Skip already downloaded items
+        if path.exists(item_path) and (not self.overwrite):
+            print("Item already exists - skipping ...")
+            return
+
         max_tries = 5
         current_try = 1
 
@@ -131,4 +140,4 @@ class NetworkSession:
                 print("Download interrupted - resuming session ...\n")
                 current_try += 1
 
-        print("\n")
+        print("")

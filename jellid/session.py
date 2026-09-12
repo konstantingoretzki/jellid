@@ -30,8 +30,8 @@ class NetworkSession:
         self.session.close()
 
     def set_post_auth_headers(self):
-        self.headers["X-Emby-Authorization"] = (
-            'MediaBrowser Client="Jellyfin Downloader", Token=' + self.token
+        self.headers["Authorization"] = (
+            'MediaBrowser Client="jellid", Token=' + self.token
         )
 
     def login(self):
@@ -40,7 +40,7 @@ class NetworkSession:
         headers_auth = {
             "Host": self.url.hostname,
             "Content-Type": "application/json",
-            "X-Emby-Authorization": 'MediaBrowser Client="Jellyfin Downloader", Device='
+            "Authorization": 'MediaBrowser Client="jellid", Device='
             + self.username
             + ', DeviceId="TW96aWxsYS81LjAgKFdpbmRvd3MgTlQgMTAuMDsgV2luNjQ7IHg2NCkgQXBwbGVXZWJLaXQvNTM3LjM2IChLSFRNTCwgbGlrZSBHZWNrbykgQ2hyb21lLzk1LjAuNDYzOC42OSBTYWZhcmkvNTM3LjM2fDE2MzkwNjYyNDcyNzM1", Version="0.1.0"',
         }
@@ -53,8 +53,8 @@ class NetworkSession:
             headers=headers_auth,
             json=data_auth,
         )
-        response_json = response.json()
 
+        response_json = response.json()
         self.token = response_json["AccessToken"]
         self.set_post_auth_headers()
 
@@ -65,46 +65,50 @@ class NetworkSession:
         return response_json
 
     def download_part(self, url, filename, byte_position):
-        headers = self.headers
+        headers = self.headers.copy()
         headers["Range"] = f"bytes={byte_position}-"
         # print(f"DEBUG: {headers}")
+
+        written = 0
+        bytes_dl = 0
+        total = 0
 
         with open(filename, "ab") as f:
             try:
                 start = time.perf_counter()
-                r = self.session.get(url, stream=True, headers=headers, timeout=10)
-                content_range = r.headers.get("Content-Range")
-                # print(content_range)
+                with self.session.get(url, stream=True, headers=headers, timeout=10) as r:
+                    content_range = r.headers.get("Content-Range")
+                    # print(content_range)
 
-                # Download will fail for servers that do not support partial download
-                if (r.status_code != 206) or (content_range is None):
-                    raise Exception("Server does not support partial download.")
+                    # Download will fail for servers that do not support partial download
+                    if (r.status_code != 206) or (content_range is None):
+                        raise RuntimeError("Server does not support partial download.")
 
-                total = int(content_range.split("/")[1])
-                # Use only downloaded bytes instead of written bytes?
-                written = 0
-                bytes_dl = 0
+                    total = int(content_range.split("/")[1])
+                    # Use only downloaded bytes instead of written bytes?
 
-                for chunk in r.iter_content(1024):
-                    bytes_dl += len(chunk)
-                    written += f.write(chunk)
-                    done = int(30 * (int(written) + int(byte_position)) / int(total))
-                    # [=============                 ] 12.34 MB/s
-                    dl_speed = bytes_dl / (time.perf_counter() - start) / (1024 * 1024)
-                    print(
-                        f"[{'=' * done}{' ' * (30-done)}] {dl_speed:.2f} MB/s", end="\r"
-                    )
+                    for chunk in r.iter_content(1024):
+                        bytes_dl += len(chunk)
+                        written += f.write(chunk)
+                        done = int(30 * (int(written) + int(byte_position)) / int(total))
+                        # [=============                 ] 12.34 MB/s
+                        dl_speed = bytes_dl / (time.perf_counter() - start) / (1024 * 1024)
+                        print(
+                            f"[{'=' * done}{' ' * (30-done)}] {dl_speed:.2f} MB/s", end="\r"
+                        )
 
             except requests.exceptions.Timeout:
                 print(
                     f"Download timeout on {time.strftime('%H:%M:%S', time.localtime())}"
                 )
 
+            except KeyboardInterrupt:
+                pass
+
             except Exception as e:
                 print(e)
 
-            finally:
-                return [written, total]
+            return [written, total]
 
     def download_item(self, item_id, item_path):
         url = urljoin(self.url.geturl(), "Items/" + str(item_id) + "/Download")
@@ -137,7 +141,7 @@ class NetworkSession:
 
             # Only a part could be downloaded
             else:
-                print("Download interrupted - resuming session ...\n")
+                print(f"Download interrupted - resuming session {current_try}/{max_tries} ...\n")
                 current_try += 1
 
         print("")
